@@ -6,15 +6,9 @@ const app = express()
 const port = process.env.PORT || 9000 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.tdolxqi.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {serverApi: {version: ServerApiVersion.v1,strict: true,deprecationErrors: true,}});
-
 // middelware 
 app.use(cors())
 app.use(express.json())
-
-
-
-
-
 
 async function run() {
   try {
@@ -22,6 +16,7 @@ async function run() {
     const database = client.db("resturent");
     const menuCollection = database.collection("menuCollection");
     const reviewsCollection = database.collection("reviews");
+    const cartCollection = database.collection("carts");
     console.log('database is runnning.....')
 
         // Menu 
@@ -33,6 +28,30 @@ async function run() {
         // Review 
         app.get('/reviews',async(req,res)=>{
             const result = await reviewsCollection.find({}).toArray()
+            res.send(result)
+        })
+
+        // cart 
+        app.post('/carts',async(req,res)=>{
+            const info = req.body 
+            const result = await cartCollection.insertOne(info)
+            res.send(result)
+        })
+
+        app.get('/carts',async(req,res)=>{
+            const email = req.query.email
+            if(!email){
+                res.send([])
+            }
+            const query = {email:email}
+            const result = await cartCollection.find(query).toArray()
+            res.send(result)
+        })
+
+        app.delete('/carts/:id',async(req,res)=>{
+            const id = req.params.id
+            const query = {_id:new ObjectId(id)}
+            const result = await cartCollection.deleteOne(query)
             res.send(result)
         })
 
